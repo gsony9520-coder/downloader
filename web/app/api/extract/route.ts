@@ -1,15 +1,37 @@
 import { headers } from "next/headers";
 import { db, ensureDb } from "@/lib/db";
+import { getYtDlp } from "@/lib/ytdlp";
 
-const WORKER_URL = process.env.WORKER_URL;
 const RATE_LIMIT = 30; // requests per hour per IP
 const WINDOW_MS = 60 * 60 * 1000;
 
-export async function POST(request: Request) {
-  if (!WORKER_URL) {
-    return Response.json({ error: "Server not configured" }, { status: 500 });
-  }
+export const maxDuration = 60;
 
+type Format = {
+  height?: number | null;
+  vcodec?: string | null;
+  filesize?: number | null;
+  filesize_approx?: number | null;
+};
+
+function parseQualities(formats: Format[] | undefined) {
+  const heights = new Map<number, number | null>();
+  for (const f of formats ?? []) {
+    if (!f.height || !f.vcodec || f.vcodec === "none") continue;
+    const size = f.filesize ?? f.filesize_approx ?? null;
+    const cur = heights.get(f.height);
+    if (cur === undefined || (size && size > (cur ?? 0))) heights.set(f.height, size);
+  }
+  return [...heights.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([height, size]) => ({
+      height,
+      label: `${height}p`,
+      size_mb: size ? Math.round(size / 1e5) / 10 : null,
+    }));
+}
+
+export async function POST(request: Request) {
   let url: string;
   try {
     url = (await request.json()).url;
@@ -41,26 +63,37 @@ export async function POST(request: Request) {
     // DB down — don't block the user
   }
 
-  const res = await fetch(`${WORKER_URL}/info`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
-    signal: AbortSignal.timeout(95_000),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
+  let meta;
+  try {
+    meta = await getYtDlp().getInfoAsync(url);
+  } catch (e) {
     return Response.json(
-      { error: data.detail ?? "Could not fetch video info" },
-      { status: res.status },
+      { error: e instanceof Error ? e.message : "Could not fetch video info" },
+      { status: 422 },
     );
   }
 
   if (db) {
     db.execute({
       sql: "INSERT INTO downloads (ip, url, title, platform, created_at) VALUES (?, ?, ?, ?, ?)",
-      args: [ip, url, data.title ?? null, data.platform ?? null, Date.now()],
+      args: [
+        ip,
+        url,
+        meta.title ?? null,
+        ("extractor_key" in meta ? meta.extractor_key : null) ?? null,
+        Date.now(),
+      ],
     }).catch(() => {});
   }
 
-  return Response.json({ ...data, worker: WORKER_URL });
+  return Response.json({
+    title: meta.title,
+    thumbnail: "thumbnail" in meta ? meta.thumbnail : null,
+    duration: "duration" in meta ? meta.duration : null,
+    uploader: "uploader" in meta ? (meta.uploader ?? meta.channel) : null,
+    platform: "extractor_key" in meta ? meta.extractor_key : null,
+    qualities: parseQualities(
+      "formats" in meta ? (meta.formats as Format[]) : undefined,
+    ),
+  });
 }

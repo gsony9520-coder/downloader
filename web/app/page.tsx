@@ -11,7 +11,6 @@ type VideoInfo = {
   uploader: string | null;
   platform: string | null;
   qualities: Quality[];
-  worker: string;
 };
 
 function fmtDuration(s: number | null) {
@@ -55,7 +54,7 @@ export default function Home() {
       title: info?.title ?? "video",
       ...Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])),
     });
-    return `${info?.worker}/download?${q}`;
+    return `/api/download?${q}`;
   }
 
   return (
