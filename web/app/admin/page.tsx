@@ -11,6 +11,7 @@ type Settings = {
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [settings, setSettings] = useState<Settings | null>(null);
   const [msg, setMsg] = useState("");
@@ -34,7 +35,7 @@ export default function AdminPage() {
     const r = await fetch("/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ username, password }),
     });
     setBusy(false);
     if (r.ok) {
@@ -95,8 +96,15 @@ export default function AdminPage() {
         {authed === false && (
           <form onSubmit={login} className="mt-6 space-y-3">
             <p className="text-sm text-zinc-500">
-              Enter your admin password (<code>ADMIN_PASSWORD</code> env var).
+              Enter your admin credentials (<code>ADMIN_USERNAME</code> /{" "}
+              <code>ADMIN_PASSWORD</code> env vars).
             </p>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username"
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-900 dark:border-zinc-700 dark:bg-zinc-900"
+            />
             <input
               type="password"
               value={password}

@@ -4,19 +4,21 @@ export async function POST(request: Request) {
   const token = adminToken();
   if (!token) {
     return Response.json(
-      { error: "ADMIN_PASSWORD env var not set" },
+      { error: "ADMIN_USERNAME / ADMIN_PASSWORD env vars not set" },
       { status: 500 },
     );
   }
-  let password: string;
+  let username: string, password: string;
   try {
-    password = (await request.json()).password;
+    ({ username, password } = await request.json());
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
-  const expected = process.env.ADMIN_PASSWORD;
-  if (password !== expected) {
-    return Response.json({ error: "Wrong password" }, { status: 401 });
+  if (
+    username !== process.env.ADMIN_USERNAME ||
+    password !== process.env.ADMIN_PASSWORD
+  ) {
+    return Response.json({ error: "Wrong username or password" }, { status: 401 });
   }
   return new Response(JSON.stringify({ ok: true }), {
     headers: {

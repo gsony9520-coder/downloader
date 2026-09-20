@@ -1,9 +1,13 @@
 import crypto from "node:crypto";
 
 export function adminToken(): string | null {
+  const user = process.env.ADMIN_USERNAME;
   const pw = process.env.ADMIN_PASSWORD;
-  if (!pw) return null;
-  return crypto.createHash("sha256").update(`sgm:${pw}`).digest("hex");
+  if (!user || !pw) return null;
+  return crypto
+    .createHash("sha256")
+    .update(`sgm:${user}:${pw}`)
+    .digest("hex");
 }
 
 export function isAdmin(request: Request): boolean {
