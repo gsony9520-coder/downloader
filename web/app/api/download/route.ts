@@ -11,6 +11,12 @@ function sanitize(name: string) {
   return s || "video";
 }
 
+function contentDisposition(title: string, ext: string) {
+  const ascii = sanitize(title).replace(/[^\x20-\x7e]/g, "_") || "video";
+  const utf8 = encodeURIComponent(sanitize(title));
+  return `attachment; filename="${ascii}.${ext}"; filename*=UTF-8''${utf8}.${ext}`;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const url = searchParams.get("url") ?? "";
@@ -57,7 +63,7 @@ export async function GET(request: Request) {
     return new Response(Readable.toWeb(nodeStream) as ReadableStream, {
       headers: {
         "Content-Type": audio ? "audio/mpeg" : "video/mp4",
-        "Content-Disposition": `attachment; filename="${sanitize(title)}.${ext}"`,
+        "Content-Disposition": contentDisposition(title, ext),
         "Content-Length": String(stat.size),
       },
     });
