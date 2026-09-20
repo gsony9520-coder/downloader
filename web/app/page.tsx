@@ -260,17 +260,6 @@ export default function Home() {
             </span>
             {settings.siteTitle}
           </div>
-          <div className="flex gap-2">
-            {PLATFORMS.map((p) => (
-              <span
-                key={p.name}
-                title={p.name}
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-white ${p.color}`}
-              >
-                {p.icon}
-              </span>
-            ))}
-          </div>
           <p className="text-xs text-zinc-500">
             © {new Date().getFullYear()} {settings.siteTitle}. All rights reserved.
           </p>
