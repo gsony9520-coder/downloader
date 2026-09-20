@@ -40,10 +40,19 @@ export async function GET(request: Request) {
     if (audio) {
       builder.addArgs("-x", "--audio-format", "mp3", "--audio-quality", "0");
     } else {
-      const sel = height
-        ? `bv*[height<=${height}]+ba/b[height<=${height}]/b`
-        : "bv*+ba/b";
-      builder.addArgs("-f", sel, "--merge-output-format", "mp4");
+      // Prefer H.264 + AAC so files play everywhere (Windows, WhatsApp, etc.)
+      // without extra codecs; fall back to whatever exists.
+      const h = height ? `[height<=${height}]` : "";
+      const sel =
+        `bv*${h}[vcodec^=avc1]+ba[ext=m4a]` +
+        `/bv*${h}[vcodec^=avc1]+ba` +
+        `/bv*${h}+ba/b${h}/b`;
+      builder.addArgs(
+        "-f", sel,
+        "-S", "vcodec:h264,acodec:m4a",
+        "--merge-output-format", "mp4",
+        "--remux-video", "mp4",
+      );
     }
 
     const result = await builder.run();
