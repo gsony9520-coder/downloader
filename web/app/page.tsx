@@ -94,6 +94,7 @@ export default function Home() {
             document.head.appendChild(link);
           }
           link.href = s.favicon;
+          link.type = s.favicon.startsWith("data:") ? s.favicon.split(";")[0].split(":")[1] : "image/x-icon";
         }
       })
       .catch(() => {});
@@ -130,7 +131,7 @@ export default function Home() {
     return `/api/download?${q}`;
   }
 
-  const isImage = settings.logo.startsWith("http");
+  const isImage = settings.logo.startsWith("http") || settings.logo.startsWith("data:");
 
   return (
     <main className="flex flex-1 flex-col">

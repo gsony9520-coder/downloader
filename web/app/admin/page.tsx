@@ -16,6 +16,7 @@ export default function AdminPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/settings")
@@ -68,20 +69,86 @@ export default function AdminPage() {
     }
   }
 
+  async function uploadFile(file: File, type: "logo" | "favicon") {
+    setUploading(type);
+    setMsg("");
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", type);
+
+    const r = await fetch("/api/admin/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    setUploading(null);
+
+    if (r.ok) {
+      const { dataUrl } = await r.json();
+      setSettings((s) => s ? { ...s, [type]: dataUrl } : s);
+      setMsg(`${type === "logo" ? "Logo" : "Favicon"} uploaded successfully!`);
+    } else {
+      const d = await r.json().catch(() => ({}));
+      setMsg(d.error || "Upload failed");
+    }
+  }
+
   const field = (
     label: string,
     key: keyof Settings,
     hint: string,
+    isImage: boolean = false,
   ) => (
     <label className="block">
       <span className="text-sm font-medium">{label}</span>
-      <input
-        value={settings?.[key] ?? ""}
-        onChange={(e) =>
-          setSettings((s) => (s ? { ...s, [key]: e.target.value } : s))
-        }
-        className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-900 dark:border-zinc-700 dark:bg-zinc-900"
-      />
+      {isImage ? (
+        <div className="mt-1 space-y-2">
+          <div className="flex gap-2">
+            <input
+              value={settings?.[key] ?? ""}
+              onChange={(e) =>
+                setSettings((s) => (s ? { ...s, [key]: e.target.value } : s))
+              }
+              placeholder="Or paste image URL..."
+              className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-900 dark:border-zinc-700 dark:bg-zinc-900"
+            />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadFile(file, key as "logo" | "favicon");
+              }}
+              disabled={uploading === key}
+              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-900 dark:border-zinc-700 dark:bg-zinc-900"
+            />
+          </div>
+          {settings?.[key] && (
+            <div className="flex items-center gap-2">
+              <img
+                src={settings[key]}
+                alt={label}
+                className="h-10 w-10 rounded object-cover border border-zinc-200"
+              />
+              <button
+                type="button"
+                onClick={() => setSettings((s) => s ? { ...s, [key]: "" } : s)}
+                className="text-xs text-red-600 hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <input
+          value={settings?.[key] ?? ""}
+          onChange={(e) =>
+            setSettings((s) => (s ? { ...s, [key]: e.target.value } : s))
+          }
+          className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-900 dark:border-zinc-700 dark:bg-zinc-900"
+        />
+      )}
       <span className="text-xs text-zinc-500">{hint}</span>
     </label>
   );
@@ -124,8 +191,8 @@ export default function AdminPage() {
         {authed && settings && (
           <form onSubmit={save} className="mt-6 space-y-4">
             {field("Site title", "siteTitle", "Shown in the header and browser tab.")}
-            {field("Logo", "logo", "Emoji/text shown in the badge, or an image URL.")}
-            {field("Favicon URL", "favicon", "Image URL for the browser tab icon. Leave empty for default.")}
+            {field("Logo", "logo", "Upload an image or paste URL (shown in header badge).", true)}
+            {field("Favicon", "favicon", "Upload an image or paste URL (browser tab icon).", true)}
             {field("Tagline", "tagline", "Small text under the main heading.")}
             <button
               disabled={busy}
