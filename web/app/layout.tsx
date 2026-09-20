@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Video Downloader",
+  title: "SGM Downloader",
   description: "Download videos from YouTube, TikTok, Instagram and Facebook",
 };
 

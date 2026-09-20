@@ -12,13 +12,17 @@ type Format = {
   vcodec?: string | null;
   filesize?: number | null;
   filesize_approx?: number | null;
+  tbr?: number | null;
 };
 
-function parseQualities(formats: Format[] | undefined) {
+function parseQualities(formats: Format[] | undefined, duration?: number | null) {
   const heights = new Map<number, number | null>();
   for (const f of formats ?? []) {
     if (!f.height || !f.vcodec || f.vcodec === "none") continue;
-    const size = f.filesize ?? f.filesize_approx ?? null;
+    const size =
+      f.filesize ??
+      f.filesize_approx ??
+      (f.tbr && duration ? (f.tbr * duration * 125) : null);
     const cur = heights.get(f.height);
     if (cur === undefined || (size && size > (cur ?? 0))) heights.set(f.height, size);
   }
@@ -94,6 +98,7 @@ export async function POST(request: Request) {
     platform: "extractor_key" in meta ? meta.extractor_key : null,
     qualities: parseQualities(
       "formats" in meta ? (meta.formats as Format[]) : undefined,
+      "duration" in meta ? meta.duration : null,
     ),
   });
 }

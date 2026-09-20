@@ -58,13 +58,27 @@ export default function Home() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center px-4 py-16">
-      <div className="w-full max-w-xl">
+    <main className="flex flex-1 flex-col">
+      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-black/80">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
+          <a href="/" className="flex items-center gap-2 font-bold text-lg">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white text-sm">
+              ↓
+            </span>
+            SGM Downloader
+          </a>
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            YouTube · TikTok · Instagram · Facebook
+          </span>
+        </div>
+      </header>
+
+      <div className="mx-auto w-full max-w-xl flex-1 px-4 py-14">
         <h1 className="text-center text-4xl font-bold tracking-tight">
-          Video Downloader
+          Download any video
         </h1>
         <p className="mt-3 text-center text-zinc-500 dark:text-zinc-400">
-          YouTube, TikTok, Instagram aur Facebook — link paste karo, download karo.
+          Link paste karo — quality choose karo — download.
         </p>
 
         <form onSubmit={fetchInfo} className="mt-8 flex gap-2">
@@ -137,10 +151,6 @@ export default function Home() {
             </div>
           </div>
         )}
-
-        <p className="mt-10 text-center text-xs text-zinc-400">
-          Sirf wo content download karein jiska haq aapko hai.
-        </p>
       </div>
     </main>
   );
