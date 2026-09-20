@@ -153,14 +153,12 @@ export default function AdminPage() {
     </label>
   );
 
-  return (
-    <main className="flex flex-1 flex-col items-center px-4 py-16">
-      <div className="w-full max-w-md">
-        <h1 className="text-2xl font-bold">Admin Panel</h1>
-
-        {authed === null && <p className="mt-4 text-sm text-zinc-500">Loading…</p>}
-
-        {authed === false && (
+  // Show login form if not authenticated
+  if (authed === false) {
+    return (
+      <main className="flex flex-1 flex-col items-center px-4 py-16">
+        <div className="w-full max-w-md">
+          <h1 className="text-2xl font-bold">Admin Panel</h1>
           <form onSubmit={login} className="mt-6 space-y-3">
             <p className="text-sm text-zinc-500">
               Enter your admin credentials (<code>ADMIN_USERNAME</code> /{" "}
@@ -181,38 +179,53 @@ export default function AdminPage() {
             />
             <button
               disabled={busy}
-              className="w-full rounded-lg bg-zinc-900 py-2.5 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+              className="w-full rounded-lg bg-zinc-900 py-2.5 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
             >
               {busy ? "…" : "Login"}
             </button>
           </form>
-        )}
+          {msg && (
+            <p className="mt-4 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-300">
+              {msg}
+            </p>
+          )}
+          <a href="/" className="mt-8 inline-block text-sm text-zinc-500 hover:underline">
+            ← Back to site
+          </a>
+        </div>
+      </main>
+    );
+  }
 
-        {authed && settings && (
-          <form onSubmit={save} className="mt-6 space-y-4">
-            {field("Site title", "siteTitle", "Shown in the header and browser tab.")}
-            {field("Logo", "logo", "Upload an image or paste URL (shown in header badge).", true)}
-            {field("Favicon", "favicon", "Upload an image or paste URL (browser tab icon).", true)}
-            {field("Tagline", "tagline", "Small text under the main heading.")}
-            <button
-              disabled={busy}
-              className="w-full rounded-lg bg-emerald-600 py-2.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
-            >
-              {busy ? "…" : "Save changes"}
-            </button>
-          </form>
-        )}
+  // Show loading state
+  if (authed === null) {
+    return (
+      <main className="flex flex-1 flex-col items-center px-4 py-16">
+        <p className="text-sm text-zinc-500">Loading…</p>
+      </main>
+    );
+  }
 
-        {msg && (
-          <p className="mt-4 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-300">
-            {msg}
-          </p>
-        )}
-
-        <a href="/" className="mt-8 inline-block text-sm text-zinc-500 hover:underline">
-          ← Back to site
-        </a>
-      </div>
-    </main>
+  // Show settings form (this will be wrapped by the layout)
+  return (
+    <div className="max-w-2xl">
+      <form onSubmit={save} className="space-y-4">
+        {field("Site title", "siteTitle", "Shown in the header and browser tab.")}
+        {field("Logo", "logo", "Upload an image or paste URL (shown in header badge).", true)}
+        {field("Favicon", "favicon", "Upload an image or paste URL (browser tab icon).", true)}
+        {field("Tagline", "tagline", "Small text under the main heading.")}
+        <button
+          disabled={busy}
+          className="rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+        >
+          {busy ? "…" : "Save changes"}
+        </button>
+      </form>
+      {msg && (
+        <p className="mt-4 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-300">
+          {msg}
+        </p>
+      )}
+    </div>
   );
 }

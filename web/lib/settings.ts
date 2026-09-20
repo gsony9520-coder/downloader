@@ -27,7 +27,10 @@ async function ensureTable() {
 }
 
 export async function getSettings(): Promise<Settings> {
-  if (!db) return DEFAULT_SETTINGS;
+  if (!db) {
+    console.warn("Database not configured, using default settings");
+    return DEFAULT_SETTINGS;
+  }
   try {
     await ensureTable();
     const { rows } = await db.execute("SELECT key, value FROM settings");
@@ -40,7 +43,9 @@ export async function getSettings(): Promise<Settings> {
 }
 
 export async function saveSettings(patch: Partial<Settings>) {
-  if (!db) throw new Error("Database not configured");
+  if (!db) {
+    throw new Error("Database not configured. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables.");
+  }
   await ensureTable();
   for (const [key, value] of Object.entries(patch)) {
     if (value === undefined) continue;
