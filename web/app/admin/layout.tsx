@@ -34,6 +34,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           >
             Profile
           </button>
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full rounded-lg px-4 py-2 text-left text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 transition-colors"
+          >
+            Visit Site
+          </a>
         </nav>
       </aside>
 

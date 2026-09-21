@@ -129,6 +129,9 @@ export default function AdminPage() {
                 src={settings[key]}
                 alt={label}
                 className="h-10 w-10 rounded object-cover border border-zinc-200"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
               />
               <button
                 type="button"

@@ -113,8 +113,9 @@ export default function Home() {
   }, []);
 
   const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    if (!darkMode) {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    if (newDarkMode) {
       document.documentElement.classList.add("dark");
       localStorage.setItem("theme", "dark");
     } else {
@@ -154,7 +155,7 @@ export default function Home() {
     return `/api/download?${q}`;
   }
 
-  const isImage = settings.logo.startsWith("http") || settings.logo.startsWith("data:");
+  const isImage = settings.logo && (settings.logo.startsWith("http") || settings.logo.startsWith("data:"));
 
   return (
     <main className="flex flex-1 flex-col">
@@ -204,17 +205,6 @@ export default function Home() {
                 </div>
               )}
             </div>
-            {/* Admin Icon */}
-            <a
-              href="/admin"
-              title="Admin"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" />
-              </svg>
-            </a>
           </div>
         </div>
       </header>
