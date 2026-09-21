@@ -131,6 +131,13 @@ export default function AdminPage() {
                 className="h-10 w-10 rounded object-cover border border-zinc-200"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
+                  const fallback = document.createElement('div');
+                  fallback.className = 'h-10 w-10 rounded border border-zinc-200 bg-zinc-100 flex items-center justify-center text-xs text-zinc-500';
+                  fallback.textContent = 'Invalid image';
+                  (e.target as HTMLImageElement).parentNode?.replaceChild(fallback, e.target as HTMLImageElement);
+                }}
+                onLoad={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'block';
                 }}
               />
               <button

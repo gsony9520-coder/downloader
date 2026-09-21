@@ -106,7 +106,10 @@ export default function Home() {
             document.head.appendChild(link);
           }
           link.href = s.favicon;
-          link.type = s.favicon.startsWith("data:") ? s.favicon.split(";")[0].split(":")[1] : "image/x-icon";
+          if (s.favicon.startsWith("data:")) {
+            const mimeType = s.favicon.split(";")[0].split(":")[1];
+            link.type = mimeType;
+          }
         }
       })
       .catch(() => {});
@@ -162,14 +165,25 @@ export default function Home() {
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-black/80">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
           <a href="/" className="flex items-center gap-2 text-lg font-bold">
-            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-emerald-600 text-sm text-white">
-              {isImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={settings.logo} alt="logo" className="h-full w-full object-cover" />
-              ) : (
-                settings.logo
-              )}
-            </span>
+            {isImage && settings.logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={settings.logo}
+                alt="logo"
+                className="h-8 w-8 rounded-lg object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const fallback = document.createElement('span');
+                  fallback.className = 'flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-sm text-white';
+                  fallback.textContent = settings.logo || '↓';
+                  (e.target as HTMLImageElement).parentNode?.replaceChild(fallback, e.target as HTMLImageElement);
+                }}
+              />
+            ) : (
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-sm text-white">
+                {settings.logo || '↓'}
+              </span>
+            )}
             {settings.siteTitle}
           </a>
           <div className="flex items-center gap-2">
@@ -304,9 +318,25 @@ export default function Home() {
       <footer className="border-t border-zinc-200 dark:border-zinc-800">
         <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-4 px-4 py-8 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-2 font-semibold">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600 text-xs text-white">
-              {isImage ? "↓" : settings.logo}
-            </span>
+            {isImage && settings.logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={settings.logo}
+                alt="logo"
+                className="h-6 w-6 rounded-md object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const fallback = document.createElement('span');
+                  fallback.className = 'flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600 text-xs text-white';
+                  fallback.textContent = settings.logo || '↓';
+                  (e.target as HTMLImageElement).parentNode?.replaceChild(fallback, e.target as HTMLImageElement);
+                }}
+              />
+            ) : (
+              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600 text-xs text-white">
+                {settings.logo || '↓'}
+              </span>
+            )}
             {settings.siteTitle}
           </div>
           <p className="text-xs text-zinc-500">
