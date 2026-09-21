@@ -32,7 +32,7 @@ const PLATFORMS = [
   },
   {
     name: "TikTok",
-    color: "bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900",
+    color: "bg-zinc-900",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
         <path d="M19.6 5.8a4.8 4.8 0 0 1-3.4-3.9V1h-3.5v13.7a2.9 2.9 0 1 1-2-2.7V8.3a6.4 6.4 0 1 0 5.5 6.4V8.6a8.2 8.2 0 0 0 4.6 1.4V6.5a4.8 4.8 0 0 1-1.2-.7z" />
@@ -83,19 +83,15 @@ export default function Home() {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   useEffect(() => {
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-      setDarkMode(true);
-      document.documentElement.classList.add("dark");
-    } else {
-      setDarkMode(false);
-      document.documentElement.classList.remove("dark");
-    }
+    // Force light mode by default
+    setDarkMode(false);
+    document.documentElement.classList.remove("dark");
+    localStorage.setItem("theme", "light");
 
     fetch("/api/settings")
       .then((r) => r.json())
       .then((s: Settings) => {
+        console.log('Settings loaded:', s);
         setSettings((prev) => ({ ...prev, ...s }));
         if (s.siteTitle) document.title = s.siteTitle;
         if (s.favicon) {
@@ -125,6 +121,7 @@ export default function Home() {
       document.documentElement.classList.remove("dark");
       localStorage.setItem("theme", "light");
     }
+    console.log('Dark mode toggled:', newDarkMode, 'Dark class present:', document.documentElement.classList.contains('dark'));
   };
 
   async function fetchInfo(e?: React.FormEvent) {
@@ -158,25 +155,29 @@ export default function Home() {
     return `/api/download?${q}`;
   }
 
-  const isImage = settings.logo && (settings.logo.startsWith("http") || settings.logo.startsWith("data:"));
-
   return (
     <main className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-black/80">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
+      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3">
           <a href="/" className="flex items-center gap-2 text-lg font-bold">
-            {isImage && settings.logo ? (
+            {settings.logo && (settings.logo.startsWith("http") || settings.logo.startsWith("data:")) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={settings.logo}
                 alt="logo"
                 className="h-8 w-8 rounded-lg object-cover"
+                onLoad={() => console.log('Logo loaded successfully')}
                 onError={(e) => {
+                  console.error('Logo failed to load:', settings.logo);
+                  console.error('Error event:', e);
                   (e.target as HTMLImageElement).style.display = 'none';
-                  const fallback = document.createElement('span');
-                  fallback.className = 'flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-sm text-white';
-                  fallback.textContent = settings.logo || '↓';
-                  (e.target as HTMLImageElement).parentNode?.replaceChild(fallback, e.target as HTMLImageElement);
+                  const parent = (e.target as HTMLImageElement).parentNode;
+                  if (parent) {
+                    const fallback = document.createElement('span');
+                    fallback.className = 'flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-sm text-white';
+                    fallback.textContent = '↓';
+                    parent.replaceChild(fallback, e.target as HTMLImageElement);
+                  }
                 }}
               />
             ) : (
@@ -191,7 +192,7 @@ export default function Home() {
             <div className="relative">
               <button
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
                   <circle cx="12" cy="8" r="4" />
@@ -199,10 +200,10 @@ export default function Home() {
                 </svg>
               </button>
               {showUserDropdown && (
-                <div className="absolute right-0 mt-2 w-48 rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+                <div className="absolute right-0 mt-2 w-48 rounded-lg border border-zinc-200 bg-white shadow-lg">
                   <button
                     onClick={toggleDarkMode}
-                    className="flex w-full items-center justify-between px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    className="flex w-full items-center justify-between px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-100"
                   >
                     <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
                     {darkMode ? (
@@ -223,11 +224,11 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-xl flex-1 px-4 py-14">
+      <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-14">
         <h1 className="text-center text-4xl font-bold tracking-tight">
           Download any video
         </h1>
-        <p className="mt-3 text-center text-zinc-500 dark:text-zinc-400">
+        <p className="mt-3 text-center text-zinc-500">
           {settings.tagline}
         </p>
 
@@ -243,32 +244,32 @@ export default function Home() {
           ))}
         </div>
 
-        <form onSubmit={fetchInfo} className="mt-6 flex gap-2">
+        <form onSubmit={fetchInfo} className="mt-6 flex gap-3">
           <input
             type="url"
             required
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="Paste video link here…"
-            className="flex-1 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm outline-none focus:border-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-zinc-400"
+            className="flex-1 rounded-xl border-2 border-zinc-300 bg-white px-8 py-4 text-lg outline-none focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/20"
           />
           <button
             type="submit"
             disabled={loading}
-            className="rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            className="rounded-xl bg-zinc-900 px-12 py-4 text-lg font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
           >
             {loading ? "…" : "Download"}
           </button>
         </form>
 
         {error && (
-          <div className="mt-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+          <div className="mt-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
         )}
 
         {info && (
-          <div className="mt-6 overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800">
+          <div className="mt-6 overflow-hidden rounded-2xl border border-zinc-200">
             {info.thumbnail && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -290,7 +291,7 @@ export default function Home() {
                   <a
                     key={q.height}
                     href={downloadUrl({ height: q.height })}
-                    className="rounded-lg border border-zinc-300 px-3 py-2.5 text-center text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                    className="rounded-lg border border-zinc-300 px-3 py-2.5 text-center text-sm font-medium hover:bg-zinc-100"
                   >
                     {q.label}
                     {q.size_mb && (
@@ -315,21 +316,25 @@ export default function Home() {
         )}
       </div>
 
-      <footer className="border-t border-zinc-200 dark:border-zinc-800">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-4 px-4 py-8 sm:flex-row sm:justify-between">
+      <footer className="border-t border-zinc-200">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-4 px-4 py-8 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-2 font-semibold">
-            {isImage && settings.logo ? (
+            {settings.logo && (settings.logo.startsWith("http") || settings.logo.startsWith("data:")) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={settings.logo}
                 alt="logo"
                 className="h-6 w-6 rounded-md object-cover"
                 onError={(e) => {
+                  console.error('Footer logo failed to load:', settings.logo);
                   (e.target as HTMLImageElement).style.display = 'none';
-                  const fallback = document.createElement('span');
-                  fallback.className = 'flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600 text-xs text-white';
-                  fallback.textContent = settings.logo || '↓';
-                  (e.target as HTMLImageElement).parentNode?.replaceChild(fallback, e.target as HTMLImageElement);
+                  const parent = (e.target as HTMLImageElement).parentNode;
+                  if (parent) {
+                    const fallback = document.createElement('span');
+                    fallback.className = 'flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600 text-xs text-white';
+                    fallback.textContent = '↓';
+                    parent.replaceChild(fallback, e.target as HTMLImageElement);
+                  }
                 }}
               />
             ) : (
